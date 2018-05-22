@@ -1,0 +1,1 @@
+from pybpod_analogoutput_module.models.projects.projects_analogoutput import ProjectsAnalogOutput as Projects

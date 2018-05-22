@@ -1,0 +1,10 @@
+Metadata-Version: 1.0
+Name: pybpod-analogoutput-module
+Version: 0
+Summary: PyBpod analog output module controller
+Home-page: UNKNOWN
+Author: ['Sergio Copeto']
+Author-email: ['sergio.copeto@research.fchampalimaud.org']
+License: Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>
+Description: UNKNOWN
+Platform: UNKNOWN
