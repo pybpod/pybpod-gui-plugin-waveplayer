@@ -42,7 +42,8 @@ class AnalogOutputModule(object):
 
     def disconnect(self):
         print('disconnecting')
-        self.arcom.close()
+        if hasattr(self,'arcom'):
+            self.arcom.close()
 
     def send(self, value):
         self.arcom.write_array([value])
