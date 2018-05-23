@@ -65,15 +65,18 @@ class AnalogOutputModule(object):
             wf.getparams()
         )
         nch = wf.getnchannels()
+
         nsamples = wf.getnframes()*nch
+        
+        framerate = wf.getframerate()*nch
+
         f = open(filename,'rb')
         # send everything through the com port
         self.send(self.COM_LOAD_WAVEFORM)
-        print('sent first byte')
         self.send(int(channel))
-        print('sent channel')
+        
         self.arcom.write_array(nsamples.to_bytes(4,'little'))
-        print('sent nsamples')
+        
         #rawb = wf.readframes(100)
         i = 0
         print('first byte read')
@@ -94,6 +97,8 @@ class AnalogOutputModule(object):
         #expect ack
         ack = self.arcom.read_uint8()
         print('ack',ack)
+
+        return framerate
 
 
     def set_output_range(self, value):

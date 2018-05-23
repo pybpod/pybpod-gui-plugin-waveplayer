@@ -373,7 +373,14 @@ class AnalogOutputModuleGUI(AnalogOutputModule, BaseWidget):
     def loadWaveform(self):
         channel_no = self._ch_select_combo.current_index
         filename = self._select_wave_btn.value
-        self._load_waveform(filename,channel_no)
+        nsamples = self._load_waveform(filename,channel_no)
+
+        if nsamples != self._params['timerPeriod']:
+            #print('frequencies are different',nsamples,self._params['timerPeriod'])
+            rpl = self.question('Bpod Analog Output Module has a different sample rate than the last imported waveform. Adjust Module sample rate to match the imported waveform?')
+            if rpl == 'yes':
+                self._timer_period.value = str(nsamples)
+                self.setTimerPeriod()
 
     
     def _play(self):
