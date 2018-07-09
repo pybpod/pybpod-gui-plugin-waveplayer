@@ -1,2 +1,4 @@
 
 *.pyc
+
+pybpod_analogoutput_module\.egg-info/
