@@ -46,7 +46,7 @@ class AnalogOutputModule(object):
 
         self.arcom = ArCOM().open(serialport,115200)
 
-        self.arcom.write_array([self.COM_HANDSHAKE])
+        self.arcom.write_array(ArduinoTypes.get_uint8_array([self.COM_HANDSHAKE]))
         
         ack = self.arcom.read_uint8()
 
