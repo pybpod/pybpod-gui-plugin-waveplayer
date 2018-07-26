@@ -45,7 +45,9 @@ class AnalogOutputModule(object):
     def open(self, serialport):
 
         self.arcom = ArCOM().open(serialport,115200)
+
         self.arcom.write_array([self.COM_HANDSHAKE])
+        
         ack = self.arcom.read_uint8()
 
         if ack!=228:
@@ -62,6 +64,7 @@ class AnalogOutputModule(object):
         
 
         self.__get_parameters()
+        self.__print_parameters()
 
         self.is_open = True
 
@@ -85,76 +88,35 @@ class AnalogOutputModule(object):
         self.send(self.COM_STOP_PLAYBACK)
 
 
-    def _load_waveform(self, filename, channel):
-        print('loading waveform',filename,'into channel',channel)
-        wf = wave.open(filename,'rb')
-        print(
-            wf.getparams()
-        )
-        nch = wf.getnchannels()
-        print(nch, 'channels')
-
-        nsamples = wf.getnframes()*nch
+    def load_waveform(self, wavform, channel):
         
-        framerate = wf.getframerate()*nch
+        data2send  = ArduinoTypes.get_uint8_array([self.COM_LOAD_WAVEFORM, channel])
+        data2send += ArduinoTypes.get_uint32_array([len(wavform)])
 
-        f = open(filename,'rb')
-        # send everything through the com port
-        self.send(self.COM_LOAD_WAVEFORM)
-        self.send(int(channel))
-        
-        self.arcom.write_array(ArduinoTypes.get_uint32_array([nsamples]))
-        #self.arcom.write_array(nsamples.to_bytes(4,'little'))
-        
-        sampwidth = wf.getsampwidth()
-        if sampwidth==1:
-            dtype = np.int8
-        elif sampwidth==2:
-            dtype = np.int16
-        elif sampwidth==4:
-            dtype = np.int32
+        wavform = np.array(wavform, dtype=np.int16)
 
-        uploaded_bytes = 0
-        wavform = np.array([], dtype=dtype)
-
-        while True:
-            #print('pre write',rawb)
-            rawb = wf.readframes(4000)
-            if not rawb: break
-
-            data    = np.fromstring(rawb, dtype=dtype)
-            wavform = np.concatenate([wavform, data])
-
-        output_range = 1000
-        if output_range==0:
+        if self.output_range==0:
             positive_only = 1;
             voltage_width = 5;
-        
-        elif output_range==1:
+        elif self.output_range==1:
             positive_only = 1;
             voltage_width = 10;
-        
-        elif output_range==2:
+        elif self.output_range==2:
             positive_only = 1;
             voltage_width = 12;
-        
-        elif output_range==3:
+        elif self.output_range==3:
             positive_only = 0
             voltage_width = 10
-        
-        elif output_range==4:
+        elif self.output_range==4:
             positive_only = 0
             voltage_width = 20
-        
-        elif output_range==5:
+        elif self.output_range==5:
             positive_only = 0
-            voltage_width = 24
-        
+            voltage_width = 24        
         else:
             positive_only = 0
             voltage_width = 10
         
-
         min_wave = min(wavform);
         max_wave = max(wavform);
         max_range = voltage_width+(positive_only*0.5);
@@ -167,13 +129,15 @@ class AnalogOutputModule(object):
         offset = (voltage_width/2)*(1-positive_only);
         wavbits = np.ceil(((wavform+offset)/voltage_width)*(2^(16)-1));
 
-        self.arcom.write_array(ArduinoTypes.get_uint16_array(wavbits))
+        data2send += ArduinoTypes.get_uint16_array(wavbits)
+
+        self.arcom.write_array(data2send)
         
         #expect ack
         ack = self.arcom.read_uint8()
         print('ack',ack)
 
-        return framerate
+        return ack==1
 
 
     def set_output_range(self, value):
@@ -192,7 +156,7 @@ class AnalogOutputModule(object):
         self.arcom.write_array(struct.pack('f',sampling_period_microseconds))
         ack = self.arcom.read_uint8()
 
-        return act==1
+        return ack==1
 
 
     def set_loop(self, loopmodes, loopdurations):
@@ -319,8 +283,9 @@ class AnalogOutputModule(object):
     ######################################################################
 
     def __get_parameters(self):
-        self.send(self.COM_GET_PARAMETERS)
-        
+        self.arcom.write_array([self.COM_GET_PARAMETERS])
+
+        print('send', self.COM_GET_PARAMETERS)
         # number of output channels
         self._n_channels             = self.arcom.read_uint8()
         # maximum number of waveforms supported
@@ -344,10 +309,22 @@ class AnalogOutputModule(object):
         self._sampling_rate = round((1/sampling_period_microseconds)*1000000)
 
         # duration of loop playback in samples
-        self._loop_duration = self.arcom.read_uint32_array(self.n_channels)*self.sampling_rate
+        self._loop_duration = np.array(self.arcom.read_uint32_array(self.n_channels))*self.sampling_rate
         
         #self.is_playing       = [False for i in range(self.n_channels)]
         self._trigger_profiles = np.zeros( (self.n_trigger_profiles, self.n_channels) )
         
 
 
+
+    def __print_parameters(self):
+        print('Number of channels:',self.n_channels)
+        print('Max waves:',self.max_waves)
+        print('Trigger mode:',self.trigger_mode)
+        print('Trigger profile enabled:',self.trigger_profile_enable)
+        print('Number of trigger profiles:',self.n_trigger_profiles)
+        print('Output range:',self.output_range)
+        print('Bpod events:',self.bpod_events)
+        print('Loop mode',self.loop_mode)
+        print('Sampling rates:',self.sampling_rate)
+        print('Loop duration:',self.loop_duration)
