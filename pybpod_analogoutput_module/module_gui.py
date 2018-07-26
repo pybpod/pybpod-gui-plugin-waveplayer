@@ -12,7 +12,7 @@ class AnalogOutputModuleGUI(AnalogOutputModule, BaseWidget):
         BaseWidget.__init__(self, self.TITLE, parent_win = parent_win)
         AnalogOutputModule.__init__(self)
 
-        self._port 			= ControlText('Serial port', default = 'COM6')
+        self._port 			= ControlText('Serial port', default = '/dev/tty.usbmodem3751351')
         self._connect_btn   = ControlButton('Connect', checkable=False, default = self.connect)
         self._get_status_btn   = ControlButton('Get Parameters', checkable=False, default = self.getparams)
         self._select_wave_btn = ControlFile('Select Waveform')
