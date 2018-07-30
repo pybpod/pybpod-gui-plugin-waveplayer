@@ -12,7 +12,7 @@ from pyforms.controls import ControlNumber
 from pyforms.controls import ControlMatplotlib
 
 
-from pybpod_analogoutput_module.module_api import AnalogOutputModule
+from .module_api import WavePlayerModule
 
 
 class OutputChannelGUI(BaseWidget):
@@ -69,13 +69,13 @@ class OutputChannelGUI(BaseWidget):
 
 
 
-class AnalogOutputModuleGUI(AnalogOutputModule, BaseWidget):
+class WavePlayerModuleGUI(WavePlayerModule, BaseWidget):
 
     TITLE = 'Analog Output Module'
 
     def __init__(self, parent_win = None):
         BaseWidget.__init__(self, self.TITLE, parent_win = parent_win)
-        AnalogOutputModule.__init__(self)
+        WavePlayerModule.__init__(self)
 
         self.set_margin(10)
 
@@ -300,4 +300,4 @@ class AnalogOutputModuleGUI(AnalogOutputModule, BaseWidget):
 
 
 if __name__=='__main__':
-    pyforms.start_app( AnalogOutputModuleGUI, geometry=(2000,0,600,500) )
+    pyforms.start_app( WavePlayerModuleGUI, geometry=(2000,0,600,500) )

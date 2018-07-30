@@ -5,16 +5,16 @@ from setuptools import setup, find_packages
 
 
 setup(
-	name='pybpod_analogoutput_module',
+	name='pybpodgui_plugin_waveplayer',
 	version=0,
-	description="""PyBpod analog output module controller""",
-	author=['Sergio Copeto'],
-	author_email=['sergio.copeto@research.fchampalimaud.org'],
+	description="""PyBpod wave player module controller""",
+	author=['Ricardo Ribeiro','Sergio Copeto'],
+	author_email=['ricardo.ribeiro@research.fchampalimaud.org', 'sergio.copeto@research.fchampalimaud.org'],
 	license='Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>',
 	url='',
 
 	include_package_data=True,
 	packages=find_packages(),
 
-	package_data={'pybpod_analogoutput_module': ['resources/*.*',]}
+	package_data={'pybpodgui_plugin_waveplayer': ['resources/*.*',]}
 )

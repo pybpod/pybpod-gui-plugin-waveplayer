@@ -5,7 +5,7 @@ import numpy as np
 import wave
 import time
 
-class AnalogOutputModule(object):
+class WavePlayerModule(object):
     
     COM_HANDSHAKE            = 227
     COM_PLAY_WAVEFORM        = ord('P')

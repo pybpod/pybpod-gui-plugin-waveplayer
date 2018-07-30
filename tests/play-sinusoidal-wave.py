@@ -1,7 +1,7 @@
 # generate wav file containing sine waves
 # FB36 - 20120617
 import math, wave, array, struct, numpy as np
-from pybpod_analogoutput_module.module_api import AnalogOutputModule
+from pybpodgui_plugin_waveplayer.module_api import WavePlayerModule
 
 amplitude   = 3.0
 duration    = 3 # seconds
@@ -27,7 +27,7 @@ for i in range(numSamples):
     data.append(int(sample))
 """
 
-m = AnalogOutputModule('/dev/ttyACM0')
+m = WavePlayerModule('/dev/ttyACM0')
 
 print( m.set_sampling_period(sampleRate) )
 m.set_output_range(m.RANGE_VOLTS_MINUS5_5)

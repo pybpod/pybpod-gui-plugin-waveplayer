@@ -1,1 +1,1 @@
-pybpod-analogoutput-module
+pybpodgui_plugin_waveplayer
