@@ -3,6 +3,7 @@ from pybpodapi.bpod_modules.bpod_module import BpodModule
 import struct
 import numpy as np
 import wave
+import time
 
 class AnalogOutputModule(object):
     
@@ -46,10 +47,9 @@ class AnalogOutputModule(object):
 
         self.arcom = ArCOM().open(serialport,115200)
 
-        self.arcom.write_array(ArduinoTypes.get_uint8_array([self.COM_HANDSHAKE]))
-        
-        ack = self.arcom.read_uint8()
+        self.arcom.write_array( ArduinoTypes.get_uint8_array([self.COM_HANDSHAKE]) )
 
+        ack = self.arcom.read_uint8()
         if ack!=228:
             raise Exception('Could not connect =( ')
         
@@ -62,81 +62,74 @@ class AnalogOutputModule(object):
             ))
         self.firmware_version = version
         
-
-        self.__get_parameters()
-        self.__print_parameters()
-
+        self.get_parameters()
         self.is_open = True
 
+        return True
 
-    def close(self):
+
+    def disconnect(self):
         if hasattr(self,'arcom'):
             self.arcom.close()
             del self.arcom
         self.is_open = False
 
-    def send(self, value):
-        self.arcom.write_array([value])
 
-    def play(self, channels, wave):
-        self.send(self.COM_PLAY_WAVEFORM)
-        self.send(channels)
-        self.send(wave)
+    def play(self, channels, wave_index):
+        self.arcom.write_array(ArduinoTypes.get_uint8_array([self.COM_PLAY_WAVEFORM, channels, wave_index]))
 
 
     def stop(self):
-        self.send(self.COM_STOP_PLAYBACK)
+        self.arcom.write_array(ArduinoTypes.get_uint8_array([self.COM_STOP_PLAYBACK]))
 
 
-    def load_waveform(self, wavform, channel):
+    def load_waveform(self, wave_index, wavform):
         
-        data2send  = ArduinoTypes.get_uint8_array([self.COM_LOAD_WAVEFORM, channel])
+        data2send  = ArduinoTypes.get_uint8_array([self.COM_LOAD_WAVEFORM, wave_index])
         data2send += ArduinoTypes.get_uint32_array([len(wavform)])
 
-        wavform = np.array(wavform, dtype=np.int16)
+        wavform = np.array(wavform)
 
         if self.output_range==0:
-            positive_only = 1;
-            voltage_width = 5;
+            positive_only = 1.0
+            voltage_width = 5.0
         elif self.output_range==1:
-            positive_only = 1;
-            voltage_width = 10;
+            positive_only = 1.0
+            voltage_width = 10.0
         elif self.output_range==2:
-            positive_only = 1;
-            voltage_width = 12;
+            positive_only = 1.0
+            voltage_width = 12.0
         elif self.output_range==3:
-            positive_only = 0
-            voltage_width = 10
+            positive_only = 0.0
+            voltage_width = 10.0
         elif self.output_range==4:
-            positive_only = 0
-            voltage_width = 20
+            positive_only = 0.0
+            voltage_width = 20.0
         elif self.output_range==5:
-            positive_only = 0
-            voltage_width = 24        
+            positive_only = 0.0
+            voltage_width = 24.0 
         else:
-            positive_only = 0
-            voltage_width = 10
+            positive_only = 0.0
+            voltage_width = 10.0
         
-        min_wave = min(wavform);
-        max_wave = max(wavform);
+        min_wave  = min(wavform);
+        max_wave  = max(wavform);
         max_range = voltage_width+(positive_only*0.5);
-        min_range = ( (voltage_width/2) * -1 ) * ( 1 - positive_only )
+        min_range = ( (voltage_width/2.0) * -1.0 ) * ( 1.0 - positive_only )
 
-        print(min_wave, max_wave, max_range, min_range)
         if (min_wave < min_range) or (max_wave > max_range):
-            raise Exception('Error setting waveform: All voltages must be within the current range: TODO.')
+            raise Exception("""Error setting waveform: All voltages must be within the current range: {0}.""".format(
+                self.RANGE_VOLTS[self.output_range]
+            ))
         
-        offset = (voltage_width/2)*(1-positive_only);
-        wavbits = np.ceil(((wavform+offset)/voltage_width)*(2^(16)-1));
+        offset = (voltage_width/2.0)*(1.0-positive_only)
+        wavbits = np.ceil(((wavform+offset)/voltage_width)*( (2.0**16.0) -1.0));
 
         data2send += ArduinoTypes.get_uint16_array(wavbits)
 
         self.arcom.write_array(data2send)
         
-        #expect ack
         ack = self.arcom.read_uint8()
-        print('ack',ack)
-
         return ack==1
 
 
@@ -152,38 +145,62 @@ class AnalogOutputModule(object):
             
         sampling_period_microseconds = (1.0/value)*1000000.0
 
-        self.send(self.COM_SET_SAMPLING_PERIOD)
-        self.arcom.write_array(struct.pack('f',sampling_period_microseconds))
-        ack = self.arcom.read_uint8()
+        data2send  = ArduinoTypes.get_uint8_array([self.COM_SET_SAMPLING_PERIOD])
+        data2send += ArduinoTypes.get_float(sampling_period_microseconds)
+        
+        self.arcom.write_array(data2send)
+       
 
+    def set_loop_duration(self, loop_duration):
+
+        if len(self.loop_mode)!=self.n_channels:
+            raise Exception('Wrong loop modes')
+
+        if len(loop_duration)!=self.n_channels:
+            raise Exception('Wrong loop durations')
+
+        bytes2send =  ArduinoTypes.get_uint8_array([self.COM_SET_LOOP] + self.loop_mode)
+        bytes2send += ArduinoTypes.get_uint32_array(np.array(loop_duration))
+
+        self.arcom.write_array(bytes2send)
+
+        ack = self.arcom.read_uint8()
+        if ack==1: self._loop_duration = loop_duration
         return ack==1
 
 
-    def set_loop(self, loopmodes, loopdurations):
 
-        if len(loopmodes)!=self.n_channels:
+    def set_loop_mode(self, loop_mode):
+
+        if len(loop_mode)!=self.n_channels:
             raise Exception('Wrong loop modes')
 
-        if len(loopdurations)!=self.n_channels:
+        if len(self.loop_duration)!=self.n_channels:
             raise Exception('Wrong loop durations')
 
-        bytes2send = ArduinoTypes.get_uint8_array(
-            [self.COM_SET_LOOP] + values + self.loopdurations*self.sampling_rate
-        )
+        for i, mode in enumerate(loop_mode):
+            if mode and self.loop_duration[i]==0:
+                raise Exception('Error: before enabling loop mode, each enabled channel must have a valid loop duration.')
+
+        bytes2send =  ArduinoTypes.get_uint8_array([self.COM_SET_LOOP] + loop_mode)
+        bytes2send += ArduinoTypes.get_uint32_array(self.loop_duration)
+
         self.arcom.write_array(bytes2send)
 
-        return self.arcom.read_uint8()==1
+        ack = self.arcom.read_uint8()
+        if ack==1: self._loop_mode = loop_mode
+        return ack==1
 
 
     def set_bpod_events(self, values):
         bytes2send = ArduinoTypes.get_uint8_array(
-            [self.COM_SET_STATE_MACHINE_REPORTING] + values
+            [self.COM_SET_BPOD_EVENTS] + values
         )
         self.arcom.write_array(bytes2send)
         ack = self.arcom.read_uint8()
 
         if ack==1:
-            self._trigger_profiles = trigger_profiles
+            self._bpod_events = values
         return ack==1
         
     def set_trigger_mode(self, value):
@@ -282,10 +299,8 @@ class AnalogOutputModule(object):
     ### PRIVATE FUNCTIONS ################################################
     ######################################################################
 
-    def __get_parameters(self):
+    def get_parameters(self):
         self.arcom.write_array([self.COM_GET_PARAMETERS])
-
-        print('send', self.COM_GET_PARAMETERS)
         # number of output channels
         self._n_channels             = self.arcom.read_uint8()
         # maximum number of waveforms supported
@@ -317,7 +332,7 @@ class AnalogOutputModule(object):
 
 
 
-    def __print_parameters(self):
+    def _print_parameters(self):
         print('Number of channels:',self.n_channels)
         print('Max waves:',self.max_waves)
         print('Trigger mode:',self.trigger_mode)
@@ -327,4 +342,9 @@ class AnalogOutputModule(object):
         print('Bpod events:',self.bpod_events)
         print('Loop mode',self.loop_mode)
         print('Sampling rates:',self.sampling_rate)
-        print('Loop duration:',self.loop_duration)
+        print('Loop durations:',self.loop_duration)
+
+
+    def debug(self):
+        self.get_parameters()
+        self._print_parameters()

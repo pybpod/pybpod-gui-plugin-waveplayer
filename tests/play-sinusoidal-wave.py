@@ -3,7 +3,7 @@
 import math, wave, array, struct, numpy as np
 from pybpod_analogoutput_module.module_api import AnalogOutputModule
 
-amplitude   = 1.0
+amplitude   = 3.0
 duration    = 3 # seconds
 freq        = 1000 # of cycles per second (Hz) (frequency of the sine waves)
 volume      = 100 # percent
@@ -29,8 +29,11 @@ for i in range(numSamples):
 
 m = AnalogOutputModule('/dev/ttyACM0')
 
-print(m.set_sampling_period(sampleRate))
+print( m.set_sampling_period(sampleRate) )
+m.set_output_range(m.RANGE_VOLTS_MINUS5_5)
+m.set_loop_mode([False, False, False, False])
+m.debug()
 
-print(m.load_waveform(wave, 1))
+print(m.load_waveform(0, wave))
 
-print(m.play(1, 1))
+print(m.play(1, 0))
