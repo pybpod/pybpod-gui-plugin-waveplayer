@@ -8,7 +8,7 @@ __status__ 		= "Development"
 
 __version__ = "0"
 
-from pyforms import conf
+from confapp import conf
 
 conf += 'pybpodgui_plugin_waveplayer.settings'
 
