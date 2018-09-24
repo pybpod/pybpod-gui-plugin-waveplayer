@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 
 
 setup(
-	name='pybpodgui_plugin_waveplayer',
+	name='pybpod-gui-plugin-waveplayer',
 	version=0,
 	description="""PyBpod wave player module controller""",
 	author=['Ricardo Ribeiro','Sergio Copeto'],

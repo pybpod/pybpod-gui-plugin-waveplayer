@@ -6,3 +6,5 @@ pybpodgui_plugin_waveplayer\.egg-info/
 build/
 
 dist/
+
+pybpod_gui_plugin_waveplayer\.egg-info/
