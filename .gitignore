@@ -2,3 +2,7 @@
 *.pyc
 
 pybpodgui_plugin_waveplayer\.egg-info/
+
+build/
+
+dist/

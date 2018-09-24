@@ -9,7 +9,7 @@ setup(
 	version=0,
 	description="""PyBpod wave player module controller""",
 	author=['Ricardo Ribeiro','Sergio Copeto'],
-	author_email=['ricardo.ribeiro@research.fchampalimaud.org', 'sergio.copeto@research.fchampalimaud.org'],
+	author_email='ricardo.ribeiro@research.fchampalimaud.org, sergio.copeto@research.fchampalimaud.org',
 	license='Copyright (C) 2007 Free Software Foundation, Inc. <http://fsf.org/>',
 	url='',
 
