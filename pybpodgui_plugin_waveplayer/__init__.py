@@ -6,8 +6,6 @@ __maintainer__ 	= ['Ricardo Ribeiro', 'Sergio Copeto']
 __email__ 		= ['ricardo.ribeiro@research.fchampalimaud.org', 'sergio.copeto']
 __status__ 		= "Development"
 
-__version__ = "0"
-
 from confapp import conf
 
 conf += 'pybpodgui_plugin_waveplayer.settings'
