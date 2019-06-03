@@ -5,7 +5,7 @@ from setuptools import setup, find_packages
 import re
 
 version = ''
-with open('pybpodgui_plugin_timeline/__init__.py', 'r') as fd:
+with open('pybpodgui_plugin_waveplayer/__init__.py', 'r') as fd:
     version = re.search(r'^__version__\s*=\s*[\'"]([^\'"]*)[\'"]', fd.read(), re.MULTILINE).group(1)
 
 if not version:
